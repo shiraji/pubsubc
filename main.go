@@ -43,6 +43,32 @@ func fatalf(format string, params ...interface{}) {
 	os.Exit(1)
 }
 
+func displayResult(ctx context.Context, projectID string) {
+	client, err := pubsub.NewClient(ctx, projectID)
+	if err != nil {
+		fatalf("Unable to create client to project %q: %s", projectID, err)
+	}
+	defer client.Close()
+
+	debugf("Client connected with project ID %q", projectID)
+
+	topics, err := client.Topics(ctx)
+	if err != nil {
+		fatalf("Unable to list topics for project %q: %s", projectID, err)
+	}
+
+	for _, topic := range topics {
+		fmt.Println(topic.ID())
+		subscriptions, err := client.Topic(topic.ID()).Subscriptions(ctx)
+		if err != nil {
+			fatalf("Unable to list subscriptions for topic %q: %s", topic.ID(), err)
+		}
+		for _, subscription := range subscriptions {
+			fmt.Println("  " + subscription.ID())
+		}
+	}
+}
+
 // create a connection to the PubSub service and create topics and subscriptions
 // for the specified project ID.
 func create(ctx context.Context, projectID string, topics Topics) error {
@@ -144,5 +170,7 @@ func main() {
 		if err := create(context.Background(), parts[0], topics); err != nil {
 			fatalf(err.Error())
 		}
+
+		displayResult(context.Background(), parts[0])
 	}
 }
