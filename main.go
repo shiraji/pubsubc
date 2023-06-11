@@ -43,22 +43,31 @@ func fatalf(format string, params ...interface{}) {
 	os.Exit(1)
 }
 
-func displayResult(ctx context.Context, projectID string) {
-	topics, err := listTopics(projectID)
+func displayResult(projectId string) {
+	topics, err := listTopics(projectId)
 	if err != nil {
-		fatalf("listTopics: %v", err)
+		fatalf("Failed to list topics: %s", err)
 		return
 	}
 
 	for _, topic := range topics {
-		subscriptions, err := listSubscriptions(projectID, topic.ID)
+		subscriptions, err := listSubscriptions(projectId, topic.ID())
 		if err != nil {
-			fatalf("listSubscriptions: %v", err)
+			fatalf("Failed to list subscriptions: %s", err)
 			return
 		}
-		fmt.Printf("Topic: %s\n", topic.ID)
+
+		debugf("Topic: %s\n", topic.ID())
 		for _, sub := range subscriptions {
-			fmt.Printf("  Subscription: %s\n", sub.ID)
+			for _, sub := range subscriptions {
+				config, err := sub.Config(context.Background())
+				if err != nil {
+					fatalf("Failed to get subscription config %s", err)
+				}
+				fmt.Printf("  Subscription: %s - Endpoint: %s\n", sub.ID(), config.PushConfig.Endpoint)
+			}
+
+			debugf("  Subscription: %s\n", sub.ID())
 		}
 	}
 }
@@ -217,6 +226,6 @@ func main() {
 			fatalf(err.Error())
 		}
 
-		displayResult(context.Background(), parts[0])
+		displayResult(parts[0])
 	}
 }
