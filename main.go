@@ -45,14 +45,21 @@ func fatalf(format string, params ...interface{}) {
 }
 
 func displayResult(projectId string) {
-	topics, err := listTopics(projectId)
+	ctx := context.Background()
+	client, err := pubsub.NewClient(ctx, projectId)
+	if err != nil {
+		return
+	}
+	defer client.Close()
+
+	topics, err := listTopics(client)
 	if err != nil {
 		fatalf("Failed to list topics: %s", err)
 		return
 	}
 
 	for _, topic := range topics {
-		subscriptions, err := listSubscriptions(projectId, topic.ID())
+		subscriptions, err := listSubscriptions(client, topic.ID())
 		if err != nil {
 			fatalf("Failed to list subscriptions: %s", err)
 			return
@@ -73,18 +80,9 @@ func displayResult(projectId string) {
 	}
 }
 
-func listSubscriptions(projectID, topicID string) ([]*pubsub.Subscription, error) {
-	// projectID := "my-project-id"
-	// topicName := "projects/sample-248520/topics/ocr-go-test-topic"
-	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, projectID)
-	if err != nil {
-		return nil, fmt.Errorf("pubsub.NewClient: %w", err)
-	}
-	defer client.Close()
-
+func listSubscriptions(client *pubsub.Client, topicID string) ([]*pubsub.Subscription, error) {
 	var subs []*pubsub.Subscription
-
+	ctx := context.Background()
 	it := client.Topic(topicID).Subscriptions(ctx)
 	for {
 		sub, err := it.Next()
@@ -99,17 +97,9 @@ func listSubscriptions(projectID, topicID string) ([]*pubsub.Subscription, error
 	return subs, nil
 }
 
-func listTopics(projectID string) ([]*pubsub.Topic, error) {
-	// projectID := "my-project-id"
-	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, projectID)
-	if err != nil {
-		return nil, fmt.Errorf("pubsub.NewClient: %w", err)
-	}
-	defer client.Close()
-
+func listTopics(client *pubsub.Client) ([]*pubsub.Topic, error) {
 	var topics []*pubsub.Topic
-
+	ctx := context.Background()
 	it := client.Topics(ctx)
 	for {
 		topic, err := it.Next()
