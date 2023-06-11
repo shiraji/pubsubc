@@ -67,13 +67,11 @@ func displayResult(projectId string) {
 
 		debugf("Topic: %s", topic.ID())
 		for _, sub := range subscriptions {
-			for _, sub := range subscriptions {
-				config, err := sub.Config(context.Background())
-				if err != nil {
-					fatalf("Failed to get subscription config %s", err)
-				}
-				fmt.Printf("  Subscription: %s - Endpoint: %s\n", sub.ID(), config.PushConfig.Endpoint)
+			config, err := sub.Config(context.Background())
+			if err != nil {
+				fatalf("Failed to get subscription config %s", err)
 			}
+			fmt.Printf("  Subscription: %s - Endpoint: %s\n", sub.ID(), config.PushConfig.Endpoint)
 		}
 	}
 }
