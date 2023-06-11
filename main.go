@@ -44,20 +44,75 @@ func fatalf(format string, params ...interface{}) {
 }
 
 func displayResult(ctx context.Context, projectID string) {
+	topics, err := listTopics(projectID)
+	if err != nil {
+		fatalf("listTopics: %v", err)
+		return
+	}
+
+	for _, topic := range topics {
+		subscriptions, err := listSubscriptions(projectID, topic.ID)
+		if err != nil {
+			fatalf("listSubscriptions: %v", err)
+			return
+		}
+		fmt.Printf("Topic: %s\n", topic.ID)
+		for _, sub := range subscriptions {
+			fmt.Printf("  Subscription: %s\n", sub.ID)
+		}
+	}
+}
+
+func listSubscriptions(projectID, topicID string) ([]*pubsub.Subscription, error) {
+	// projectID := "my-project-id"
+	// topicName := "projects/sample-248520/topics/ocr-go-test-topic"
+	ctx := context.Background()
 	client, err := pubsub.NewClient(ctx, projectID)
 	if err != nil {
-		fatalf("Unable to create client to project %q: %s", projectID, err)
+		return nil, fmt.Errorf("pubsub.NewClient: %w", err)
 	}
 	defer client.Close()
 
-	debugf("Client connected with project ID %q", projectID)
+	var subs []*pubsub.Subscription
 
-	for _, topic := range client.Topics(ctx) {
-		fmt.Println(topic.ID())
-		for _, subscription := range client.Topic(topic.ID()).Subscriptions(ctx) {
-			fmt.Println("  " + subscription.ID())
+	it := client.Topic(topicID).Subscriptions(ctx)
+	for {
+		sub, err := it.Next()
+		if err == iterator.Done {
+			break
 		}
+		if err != nil {
+			return nil, fmt.Errorf("Next: %w", err)
+		}
+		subs = append(subs, sub)
 	}
+	return subs, nil
+}
+
+func listTopics(projectID string) ([]*pubsub.Topic, error) {
+	// projectID := "my-project-id"
+	ctx := context.Background()
+	client, err := pubsub.NewClient(ctx, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("pubsub.NewClient: %w", err)
+	}
+	defer client.Close()
+
+	var topics []*pubsub.Topic
+
+	it := client.Topics(ctx)
+	for {
+		topic, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("Next: %w", err)
+		}
+		topics = append(topics, topic)
+	}
+
+	return topics, nil
 }
 
 // create a connection to the PubSub service and create topics and subscriptions
