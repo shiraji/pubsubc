@@ -63,12 +63,10 @@ func create(ctx context.Context, projectID string, topics Topics) error {
 
 		for _, subscription := range subscriptions {
 			subscriptionParts := strings.Split(subscription, "+")
-			debugf("%q", subscriptionParts)
-			debugf("%q", subscription)
-			subscriptionID := subscriptionParts[0]
+			subscriptionID := strings.TrimSpace(subscriptionParts[0])
 			var pushEndpoint string
 			if len(subscriptionParts) > 1 {
-				pushEndpoint = strings.Replace(subscriptionParts[1], "|", ":", 1)
+				pushEndpoint = strings.Replace(strings.TrimSpace(subscriptionParts[1]), "|", ":", 1)
 			} else {
 				pushEndpoint = ""
 			}
