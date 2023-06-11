@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"cloud.google.com/go/pubsub"
+	"google.golang.org/api/iterator"
 )
 
 var (
