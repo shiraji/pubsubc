@@ -70,9 +70,10 @@ func create(ctx context.Context, projectID string, topics Topics) error {
 			} else {
 				pushEndpoint = ""
 			}
-			debugf("    Creating subscription %q", subscriptionID)
 			if pushEndpoint != "" {
-				pushConfig := pubsub.PushConfig{Endpoint: "http://" + pushEndpoint}
+				endPointURL := "http://" + pushEndpoint
+				debugf("    Creating subscription %q - endpoint %q", subscriptionID, endPointURL)
+				pushConfig := pubsub.PushConfig{Endpoint: endPointURL}
 				_, err = client.CreateSubscription(
 					ctx,
 					subscriptionID,
@@ -82,6 +83,7 @@ func create(ctx context.Context, projectID string, topics Topics) error {
 					return fmt.Errorf("Unable to create push subscription %q on topic %q for project %q using push endpoint %q: %s", subscriptionID, topicID, projectID, pushEndpoint, err)
 				}
 			} else {
+				debugf("    Creating subscription %q", subscriptionID)
 				_, err = client.CreateSubscription(ctx, subscriptionID, pubsub.SubscriptionConfig{Topic: topic})
 				if err != nil {
 					return fmt.Errorf("Unable to create subscription %q on topic %q for project %q: %s", subscriptionID, topicID, projectID, err)
