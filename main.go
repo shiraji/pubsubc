@@ -52,18 +52,9 @@ func displayResult(ctx context.Context, projectID string) {
 
 	debugf("Client connected with project ID %q", projectID)
 
-	topics, err := client.Topics(ctx)
-	if err != nil {
-		fatalf("Unable to list topics for project %q: %s", projectID, err)
-	}
-
-	for _, topic := range topics {
+	for _, topic := range client.Topics(ctx) {
 		fmt.Println(topic.ID())
-		subscriptions, err := client.Topic(topic.ID()).Subscriptions(ctx)
-		if err != nil {
-			fatalf("Unable to list subscriptions for topic %q: %s", topic.ID(), err)
-		}
-		for _, subscription := range subscriptions {
+		for _, subscription := range client.Topic(topic.ID()).Subscriptions(ctx) {
 			fmt.Println("  " + subscription.ID())
 		}
 	}
