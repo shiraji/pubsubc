@@ -65,7 +65,7 @@ func displayResult(projectId string) {
 			return
 		}
 
-		debugf("Topic: %s\n", topic.ID())
+		debugf("Topic: %s", topic.ID())
 		for _, sub := range subscriptions {
 			for _, sub := range subscriptions {
 				config, err := sub.Config(context.Background())
@@ -74,8 +74,6 @@ func displayResult(projectId string) {
 				}
 				fmt.Printf("  Subscription: %s - Endpoint: %s\n", sub.ID(), config.PushConfig.Endpoint)
 			}
-
-			debugf("  Subscription: %s\n", sub.ID())
 		}
 	}
 }
